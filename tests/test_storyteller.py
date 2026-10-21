@@ -36,13 +36,27 @@ def test_guided_rewrites_until_on_target():
 
 
 def test_baseline_measures_but_never_rewrites():
-    trace = write(Scripted([story(HARD)]), REQ, guided=False)
+    trace = write(Scripted([story(HARD)]), REQ, strategy="baseline")
     assert len(trace.drafts) == 1 and not trace.final.on_target
 
 
-def test_rewrites_are_capped_and_bad_json_keeps_the_last_story():
-    trace = write(Scripted([story(HARD), "not json", story(HARD)]), REQ, max_rewrites=2)
-    assert len(trace.drafts) == 3 and not trace.final.on_target
+def test_rewrites_are_capped_and_bad_json_is_skipped():
+    trace = write(Scripted([story(HARD), "not json", story(HARD)]), REQ, budget=3)
+    assert len(trace.drafts) == 2 and not trace.final.on_target
+
+
+def test_a_worse_rewrite_does_not_replace_a_better_draft():
+    close = "Mariana ve un río azul. El río canta. Ella ríe mucho con su amiga."  # near the 5-6 band
+    llm = Scripted([story(close), story(HARD), story(HARD)])
+    trace = write(llm, REQ)
+    assert trace.final.story.pages[0].text == close
+
+
+def test_best_of_keeps_the_closest_and_stops_when_on_target():
+    llm = Scripted([story(HARD), story(EASY), story(HARD)])
+    trace = write(llm, REQ, strategy="best_of")
+    assert len(trace.drafts) == 2 and trace.final.on_target and len(llm.prompts) == 2
+    assert llm.prompts[0] == llm.prompts[1]  # the same request again, not a rewrite
 
 
 def test_parse_round_trip():
@@ -64,4 +78,5 @@ def test_telegraphic_text_is_asked_to_join_sentences():
     natural = "Emiliano mira el volcán desde la ventana de su casa. El sol de la tarde pinta el cielo de naranja."
     llm = Scripted([story(choppy), story(natural)])
     trace = write(llm, req)
-    assert not trace.drafts[0].on_target and "uniendo oraciones muy cortas" in llm.prompts[1]
+    assert not trace.drafts[0].on_target and "uniendo oraciones cortas" in llm.prompts[1]
+    assert "Sonríe." in llm.prompts[1]  # the actual short sentences are quoted
