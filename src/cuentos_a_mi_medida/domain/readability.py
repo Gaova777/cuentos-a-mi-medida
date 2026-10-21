@@ -109,3 +109,20 @@ def on_target(r: Readability, t: Target) -> bool:
     """The index means nothing on a text that isn't Spanish, so that comes first."""
     return (r.spanish >= 0.8 and r.fernandez_huerta >= t.min_index
             and t.min_words_per_sentence <= r.words_per_sentence <= t.max_words_per_sentence)
+
+
+def distance(r: Readability, t: Target) -> float:
+    """How far a text is from its target (0 when on it): index points short of the minimum count a tenth as much as
+    words per sentence outside the band, and a text that isn't Spanish is as far as it gets."""
+    if r.spanish < 0.8:
+        return 100.0
+    return (max(0.0, t.min_index - r.fernandez_huerta) / 10 + max(0.0, t.min_words_per_sentence - r.words_per_sentence)
+            + max(0.0, r.words_per_sentence - t.max_words_per_sentence))
+
+
+def sentence_list(text: str) -> list[str]:
+    return [p.strip() for p in SENTENCE_END.split(text) if WORD.search(p)]
+
+
+def long_words(text: str, min_syllables: int = 4) -> list[str]:
+    return sorted({w.lower() for w in words(text) if syllables(w) >= min_syllables}, key=lambda w: -syllables(w))
