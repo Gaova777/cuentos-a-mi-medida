@@ -1,0 +1,100 @@
+{
+ "model": "qwen3_4b-instruct",
+ "stories": 72,
+ "baseline_5-6": {
+  "n": 8,
+  "on_target": 0.5,
+  "mean_index": 91.4,
+  "mean_words_per_sentence": 6.3,
+  "mean_drafts": 1.0,
+  "spanish_ok": 1.0
+ },
+ "baseline_7-8": {
+  "n": 8,
+  "on_target": 0.5,
+  "mean_index": 90.7,
+  "mean_words_per_sentence": 6.9,
+  "mean_drafts": 1.0,
+  "spanish_ok": 1.0
+ },
+ "baseline_9-10": {
+  "n": 8,
+  "on_target": 0.25,
+  "mean_index": 89.2,
+  "mean_words_per_sentence": 9.2,
+  "mean_drafts": 1.0,
+  "spanish_ok": 1.0
+ },
+ "baseline_all": {
+  "n": 24,
+  "on_target": 0.4166666666666667,
+  "mean_index": 90.4,
+  "mean_words_per_sentence": 7.5,
+  "mean_drafts": 1.0,
+  "spanish_ok": 1.0
+ },
+ "rewrite_5-6": {
+  "n": 8,
+  "on_target": 0.75,
+  "mean_index": 92.0,
+  "mean_words_per_sentence": 6.0,
+  "mean_drafts": 1.75,
+  "spanish_ok": 1.0
+ },
+ "rewrite_7-8": {
+  "n": 8,
+  "on_target": 0.75,
+  "mean_index": 91.4,
+  "mean_words_per_sentence": 7.4,
+  "mean_drafts": 2.0,
+  "spanish_ok": 1.0
+ },
+ "rewrite_9-10": {
+  "n": 8,
+  "on_target": 0.625,
+  "mean_index": 89.3,
+  "mean_words_per_sentence": 9.2,
+  "mean_drafts": 2.0,
+  "spanish_ok": 1.0
+ },
+ "rewrite_all": {
+  "n": 24,
+  "on_target": 0.7083333333333334,
+  "mean_index": 90.9,
+  "mean_words_per_sentence": 7.6,
+  "mean_drafts": 1.92,
+  "spanish_ok": 1.0
+ },
+ "best_of_5-6": {
+  "n": 8,
+  "on_target": 0.625,
+  "mean_index": 92.4,
+  "mean_words_per_sentence": 6.6,
+  "mean_drafts": 2.12,
+  "spanish_ok": 1.0
+ },
+ "best_of_7-8": {
+  "n": 8,
+  "on_target": 0.625,
+  "mean_index": 92.1,
+  "mean_words_per_sentence": 6.9,
+  "mean_drafts": 1.88,
+  "spanish_ok": 1.0
+ },
+ "best_of_9-10": {
+  "n": 8,
+  "on_target": 0.5,
+  "mean_index": 89.9,
+  "mean_words_per_sentence": 9.5,
+  "mean_drafts": 2.5,
+  "spanish_ok": 1.0
+ },
+ "best_of_all": {
+  "n": 24,
+  "on_target": 0.5833333333333334,
+  "mean_index": 91.5,
+  "mean_words_per_sentence": 7.7,
+  "mean_drafts": 2.17,
+  "spanish_ok": 1.0
+ }
+}

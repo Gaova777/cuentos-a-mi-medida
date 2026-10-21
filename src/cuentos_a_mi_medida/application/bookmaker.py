@@ -15,7 +15,7 @@ def make(job: dict, library, llm, images, voice, safety=None) -> dict:
     story_id = job["story_id"]
     req = Request(job["name"], job["ages"], job["likes"], job.get("lesson", ""))
     library.update(story_id, "writing")
-    trace = write(llm, req, strategy=job.get("strategy", "best_of"))
+    trace = write(llm, req, strategy=job.get("strategy", "rewrite"))
     if not trace.drafts:
         library.update(story_id, "failed", error="the story could not be written")
         return {"story_id": story_id, "status": "failed"}
@@ -43,6 +43,6 @@ def make(job: dict, library, llm, images, voice, safety=None) -> dict:
              "words_per_sentence": draft.readability.words_per_sentence, "on_target": draft.on_target,
              "target": {"min_index": target.min_index, "words_per_sentence": [target.min_words_per_sentence,
                                                                              target.max_words_per_sentence]},
-             "rewrites": len(trace.drafts) - 1}
+             "drafts": len(trace.drafts)}
     library.update(story_id, "done", title=story.title, pages=pages, readability=level)
     return {"story_id": story_id, "status": "done"}

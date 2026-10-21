@@ -108,7 +108,7 @@ export default function Reader({ params }: { params: Promise<{ id: string }> }) 
           Para {story.request.ages} años · índice de lectura Fernández-Huerta {r.fernandez_huerta} (meta ≥{' '}
           {r.target.min_index}) · {r.words_per_sentence} palabras por oración (meta {r.target.words_per_sentence[0]}–
           {r.target.words_per_sentence[1]}) · {r.on_target ? 'en el nivel' : 'fuera del nivel'}
-          {r.rewrites > 0 ? ` tras ${r.rewrites} ${r.rewrites === 1 ? 'reescritura' : 'reescrituras'}` : ''}
+          {r.drafts > 1 ? ` · el más cercano de ${r.drafts} borradores` : ''}
         </footer>
       )}
     </main>

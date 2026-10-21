@@ -65,7 +65,7 @@ def test_make_writes_draws_narrates_and_stores():
     item = lib.get(sid)
     assert result["status"] == "done" and item["status"] == "done" and item["title"] == "El río"
     assert len(item["pages"]) == PAGES and len(item["pages"][0]["cues"]) == 3
-    assert item["readability"]["on_target"] and item["readability"]["rewrites"] == 0
+    assert item["readability"]["on_target"] and item["readability"]["drafts"] == 1
     assert {k.rsplit(".", 1)[1] for k in lib.files} == {"jpg", "wav"} and len(lib.files) == 2 * PAGES
 
 

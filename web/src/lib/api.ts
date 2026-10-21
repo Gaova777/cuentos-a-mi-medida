@@ -27,7 +27,7 @@ export interface StoryView {
     words_per_sentence: number
     on_target: boolean
     target: { min_index: number; words_per_sentence: [number, number] }
-    rewrites: number
+    drafts: number
   }
 }
 
