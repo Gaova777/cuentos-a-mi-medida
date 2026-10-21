@@ -27,6 +27,11 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.17.1",
 ]
+repro = [
+    "clean-fid>=0.1.35",
+    "lpips>=0.1.4",
+    "open-clip-torch>=3.3.0",
+]
 
 [tool.ruff]
 line-length = 120
