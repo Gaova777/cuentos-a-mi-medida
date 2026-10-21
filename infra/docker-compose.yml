@@ -1,0 +1,11 @@
+# AWS on the laptop. 4.10.0 is pinned: later LocalStack images refuse to start without an account token.
+services:
+  localstack:
+    image: localstack/localstack:4.10.0
+    ports:
+      - 127.0.0.1:4566:4566
+    environment:
+      SERVICES: s3,dynamodb,sqs
+      PERSISTENCE: "1"
+    volumes:
+      - ../data/localstack:/var/lib/localstack
