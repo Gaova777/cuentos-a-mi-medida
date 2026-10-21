@@ -8,8 +8,9 @@ EASY = "Mariana ve un río. El río es azul. Ella ríe."
 
 
 def story(text):
-    return json.dumps({"title": "El río", "hero": "a girl with curly hair and a yellow raincoat",
-                       "pages": [{"text": text, "scene": "a girl by a river"} for _ in range(PAGES)]})
+    return json.dumps({"titulo": "El río", "protagonista_en_ingles": "a girl with curly hair and a yellow raincoat",
+                       "paginas": [{"texto_en_espanol": text, "escena_en_ingles": "a girl by a river"}
+                                   for _ in range(PAGES)]})
 
 
 class Scripted:
@@ -47,4 +48,11 @@ def test_rewrites_are_capped_and_bad_json_keeps_the_last_story():
 def test_parse_round_trip():
     s = parse(story(EASY))
     assert s.title == "El río" and len(s.pages) == PAGES and parse(to_json(s)).pages[0].text == EASY
-    assert parse('{"title": "x"}') is None
+    assert parse('{"titulo": "x"}') is None
+
+
+def test_english_text_is_sent_back_even_if_easy():
+    llm = Scripted([story("The girl sees a river. It is blue. She smiles."), story(EASY)])
+    trace = write(llm, REQ)
+    assert trace.drafts[0].readability.spanish < 0.8 and not trace.drafts[0].on_target
+    assert "no está en español" in llm.prompts[1] and trace.final.on_target

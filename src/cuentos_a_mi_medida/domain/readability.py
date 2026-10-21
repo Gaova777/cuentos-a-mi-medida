@@ -52,6 +52,20 @@ def sentences(text: str) -> int:
     return max(1, len(parts))
 
 
+# the commonest function words of each language; a story's share of each says which one it is in
+SPANISH = {"el", "la", "los", "las", "un", "una", "y", "de", "del", "en", "que", "se", "no", "es", "con", "por",
+           "para", "su", "al", "lo", "le", "muy", "pero", "como", "ya", "está"}
+ENGLISH = {"the", "a", "an", "and", "of", "in", "to", "is", "it", "that", "with", "for", "on", "she", "he", "they",
+           "his", "her", "was", "are", "but", "as", "at"}
+
+
+def spanish_share(text: str) -> float:
+    """Of the function words found, the share that are Spanish (1.0: Spanish, 0.0: English)."""
+    ws = [w.lower() for w in words(text)]
+    es, en = sum(w in SPANISH for w in ws), sum(w in ENGLISH for w in ws)
+    return es / (es + en) if es + en else 0.0
+
+
 @dataclass(frozen=True)
 class Readability:
     words: int
@@ -59,6 +73,7 @@ class Readability:
     syllables: int
     fernandez_huerta: float
     words_per_sentence: float
+    spanish: float = 1.0
 
 
 def measure(text: str) -> Readability:
@@ -67,7 +82,7 @@ def measure(text: str) -> Readability:
     syl = sum(syllables(w) for w in ws)
     s = sentences(text)
     index = 206.84 - 0.60 * (100 * syl / n) - 1.02 * (n / s)
-    return Readability(len(ws), s, syl, round(index, 1), round(n / s, 1))
+    return Readability(len(ws), s, syl, round(index, 1), round(n / s, 1), round(spanish_share(text), 2))
 
 
 @dataclass(frozen=True)
@@ -88,4 +103,5 @@ TARGETS = {
 
 
 def on_target(r: Readability, t: Target) -> bool:
-    return r.fernandez_huerta >= t.min_index and r.words_per_sentence <= t.max_words_per_sentence
+    """The index means nothing on a text that isn't Spanish, so that comes first."""
+    return r.spanish >= 0.8 and r.fernandez_huerta >= t.min_index and r.words_per_sentence <= t.max_words_per_sentence

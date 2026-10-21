@@ -40,3 +40,10 @@ def test_targets_tighten_for_younger_readers():
     r = measure("El oso vio un río grande y azul, y se metió a nadar.")
     assert on_target(r, TARGETS["9-10"])
     assert not on_target(r, TARGETS["5-6"])  # 13 words in one sentence
+
+
+def test_spanish_share_tells_the_language():
+    from cuentos_a_mi_medida.domain.readability import spanish_share
+
+    assert spanish_share("El gato come y la niña ríe con su perro.") == 1.0
+    assert spanish_share("The cat eats and the girl laughs with her dog.") == 0.0
