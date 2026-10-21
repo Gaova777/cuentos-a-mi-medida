@@ -1,5 +1,6 @@
-"""Does the story land at the child's reading level? 12 requests x 3 age bands, written once with the age in the prompt
-(baseline) and again with the measure-and-rewrite loop (guided, up to 2 rewrites).
+"""Does the story land at the child's reading level? 8 requests x 3 age bands, three ways: the age in the prompt only
+(baseline, 1 call); measure and ask the LLM to rewrite with concrete feedback (rewrite, up to 3 calls); write up to
+three and keep the closest (best_of, up to 3 calls).
 
 Resumable: one JSON line per story in data/readability/<model>.jsonl.
 
@@ -37,13 +38,13 @@ def main(args):
     done = {(r["name"], r["ages"], r["mode"]) for r in map(json.loads, out.open())} if out.exists() else set()
     llm = OllamaLLM(args.model)
     with out.open("a") as f:
-        for name, likes, lesson in CHILDREN:
+        for name, likes, lesson in CHILDREN[:8]:
             for ages in TARGETS:
-                for mode in ("baseline", "guided"):
+                for mode in ("baseline", "rewrite", "best_of"):
                     if (name, ages, mode) in done:
                         continue
                     start = time.time()
-                    trace = write(llm, Request(name, ages, likes, lesson), guided=mode == "guided")
+                    trace = write(llm, Request(name, ages, likes, lesson), strategy=mode)
                     if not trace.drafts:
                         row = {"name": name, "ages": ages, "mode": mode, "failed": True}
                     else:
@@ -66,7 +67,7 @@ def main(args):
 def summarize(path: Path):
     rows = [json.loads(line) for line in path.open()]
     summary = {"model": path.stem, "stories": len(rows)}
-    for mode in ("baseline", "guided"):
+    for mode in ("baseline", "rewrite", "best_of"):
         for ages in [*TARGETS, "all"]:
             rs = [r for r in rows if r["mode"] == mode and (ages == "all" or r["ages"] == ages) and not r.get("failed")]
             if not rs:

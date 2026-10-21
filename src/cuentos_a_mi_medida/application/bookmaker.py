@@ -15,7 +15,7 @@ def make(job: dict, library, llm, images, voice, safety=None) -> dict:
     story_id = job["story_id"]
     req = Request(job["name"], job["ages"], job["likes"], job.get("lesson", ""))
     library.update(story_id, "writing")
-    trace = write(llm, req)
+    trace = write(llm, req, strategy=job.get("strategy", "best_of"))
     if not trace.drafts:
         library.update(story_id, "failed", error="the story could not be written")
         return {"story_id": story_id, "status": "failed"}
