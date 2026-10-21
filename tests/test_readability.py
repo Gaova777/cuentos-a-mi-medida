@@ -36,10 +36,12 @@ def test_formula_rewards_short_sentences():
     assert split.fernandez_huerta > one.fernandez_huerta
 
 
-def test_targets_tighten_for_younger_readers():
+def test_targets_are_bands_of_sentence_length():
     r = measure("El oso vio un río grande y azul, y se metió a nadar.")
     assert on_target(r, TARGETS["9-10"])
     assert not on_target(r, TARGETS["5-6"])  # 13 words in one sentence
+    choppy = measure("El oso nada. El sol sale. El río es azul.")
+    assert on_target(choppy, TARGETS["5-6"]) and not on_target(choppy, TARGETS["9-10"])
 
 
 def test_spanish_share_tells_the_language():

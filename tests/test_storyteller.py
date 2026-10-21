@@ -31,8 +31,8 @@ def test_guided_rewrites_until_on_target():
     llm = Scripted([story(HARD), story(EASY)])
     trace = write(llm, REQ)
     assert [d.on_target for d in trace.drafts] == [False, True]
-    assert "Mariana" in llm.prompts[0] and "compartir" in llm.prompts[0] and "máximo 8 palabras" in llm.prompts[0]
-    assert "Fernández-Huerta" in llm.prompts[1] and "la meta es al menos 95" in llm.prompts[1]
+    assert "Mariana" in llm.prompts[0] and "compartir" in llm.prompts[0] and "entre 3 y 8 palabras" in llm.prompts[0]
+    assert "Fernández-Huerta" in llm.prompts[1] and "la meta es al menos 90" in llm.prompts[1]
 
 
 def test_baseline_measures_but_never_rewrites():
@@ -56,3 +56,12 @@ def test_english_text_is_sent_back_even_if_easy():
     trace = write(llm, REQ)
     assert trace.drafts[0].readability.spanish < 0.8 and not trace.drafts[0].on_target
     assert "no está en español" in llm.prompts[1] and trace.final.on_target
+
+
+def test_telegraphic_text_is_asked_to_join_sentences():
+    req = Request("Emiliano", "9-10", "los volcanes")
+    choppy = "Emiliano mira el volcán. El sol brilla. Sonríe."
+    natural = "Emiliano mira el volcán desde la ventana de su casa. El sol de la tarde pinta el cielo de naranja."
+    llm = Scripted([story(choppy), story(natural)])
+    trace = write(llm, req)
+    assert not trace.drafts[0].on_target and "uniendo oraciones muy cortas" in llm.prompts[1]

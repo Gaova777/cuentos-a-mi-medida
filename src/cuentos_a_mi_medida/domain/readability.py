@@ -87,21 +87,25 @@ def measure(text: str) -> Readability:
 
 @dataclass(frozen=True)
 class Target:
-    """What a child of that age can read alone: an easy enough text, in short enough sentences."""
+    """What a child of that age can read alone: an easy enough text, in sentences of the right length."""
     ages: str
     min_index: float
+    min_words_per_sentence: float
     max_words_per_sentence: float
 
 
-# Fernández-Huerta's 90-100 band is about fourth grade (9-10 years); younger readers need easier text and much
-# shorter sentences than the index alone asks for, so each band adds a sentence-length cap.
+# The scale's easiest band, 90-100, is about fourth grade (9-10 years), and it has nothing below that; Spanish words
+# are long, so the index saturates and younger readers differ mostly in how long a sentence they can hold. Each age
+# gets a band of sentence lengths: the index alone rewards telegraphic sentences ("El sol brilla. Sonríe."), which
+# are too simple for a nine-year-old.
 TARGETS = {
-    "5-6": Target("5-6", 95, 8),
-    "7-8": Target("7-8", 90, 11),
-    "9-10": Target("9-10", 85, 15),
+    "5-6": Target("5-6", 90, 3, 8),
+    "7-8": Target("7-8", 90, 5, 11),
+    "9-10": Target("9-10", 90, 7, 15),
 }
 
 
 def on_target(r: Readability, t: Target) -> bool:
     """The index means nothing on a text that isn't Spanish, so that comes first."""
-    return r.spanish >= 0.8 and r.fernandez_huerta >= t.min_index and r.words_per_sentence <= t.max_words_per_sentence
+    return (r.spanish >= 0.8 and r.fernandez_huerta >= t.min_index
+            and t.min_words_per_sentence <= r.words_per_sentence <= t.max_words_per_sentence)

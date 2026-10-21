@@ -34,20 +34,17 @@ un final feliz, para leer en voz alta.
 {level}
 Responde solo con JSON."""
 
-LEVEL = {
-    "5-6": "- Para que lo lea solo un niño de 5 a 6 años: oraciones de máximo 8 palabras y palabras cortas y comunes.",
-    "7-8": "- Para que lo lea solo un niño de 7 a 8 años: oraciones de máximo 11 palabras y palabras sencillas.",
-    "9-10": "- Para que lo lea solo un niño de 9 a 10 años: oraciones de máximo 15 palabras y vocabulario sencillo.",
-}
+LEVEL = ("- Para que lo lea solo un niño de {ages} años: oraciones de entre {lo} y {hi} palabras, con palabras "
+         "cortas y comunes.")
 
 REWRITE = """Este cuento es para que lo lea solo un niño de {ages} años. {problem}
 
-Reescribe "texto_en_espanol" de cada página, en español, con oraciones más cortas y palabras más cortas y comunes,
-sin cambiar la historia, el título, el protagonista ni las escenas. Responde solo con el mismo JSON."""
+Reescribe "texto_en_espanol" de cada página, en español, {how}, sin cambiar la historia, el título, el protagonista
+ni las escenas. Responde solo con el mismo JSON."""
 
 NOT_SPANISH = "Pero el texto de las páginas no está en español, y tiene que estarlo."
-TOO_HARD = ("Pero está difícil para esa edad: su índice de lecturabilidad Fernández-Huerta es {index} "
-            "(la meta es al menos {min_index}) y tiene {wps} palabras por oración (la meta es máximo {max_wps}).")
+OFF_TARGET = ("Pero no está al nivel de esa edad: su índice de lecturabilidad Fernández-Huerta es {index} (la meta es "
+              "al menos {min_index}) y tiene {wps} palabras por oración (la meta es entre {lo} y {hi}).")
 
 
 @dataclass
@@ -87,8 +84,8 @@ def write(llm: LLM, req: Request, max_rewrites: int = 2, guided: bool = True) ->
     """guided=False is the baseline: the age goes in the prompt, but nobody measures the result."""
     target = TARGETS[req.ages]
     lesson = f"- El cuento enseña, sin sermones: {req.lesson}.\n" if req.lesson else ""
-    prompt = WRITE.format(name=req.name, ages=req.ages, likes=req.likes, lesson=lesson, pages=PAGES,
-                          level=LEVEL[req.ages])
+    level = LEVEL.format(ages=req.ages, lo=int(target.min_words_per_sentence), hi=int(target.max_words_per_sentence))
+    prompt = WRITE.format(name=req.name, ages=req.ages, likes=req.likes, lesson=lesson, pages=PAGES, level=level)
     trace = Trace()
     story = parse(llm.chat([{"role": "user", "content": prompt}], schema=SCHEMA))
     for attempt in range(max_rewrites + 1):
@@ -98,9 +95,12 @@ def write(llm: LLM, req: Request, max_rewrites: int = 2, guided: bool = True) ->
         trace.drafts.append(Draft(story, r, on_target(r, target)))
         if not guided or on_target(r, target) or attempt == max_rewrites:
             break
+        lo, hi = int(target.min_words_per_sentence), int(target.max_words_per_sentence)
         problem = (NOT_SPANISH if r.spanish < 0.8 else
-                   TOO_HARD.format(index=r.fernandez_huerta, min_index=target.min_index, wps=r.words_per_sentence,
-                                   max_wps=target.max_words_per_sentence))
-        ask = REWRITE.format(ages=req.ages, problem=problem.strip()) + "\n\n" + to_json(story)
+                   OFF_TARGET.format(index=r.fernandez_huerta, min_index=target.min_index, wps=r.words_per_sentence,
+                                     lo=lo, hi=hi))
+        how = ("uniendo oraciones muy cortas en oraciones naturales" if r.words_per_sentence < lo else
+               "con oraciones más cortas") + " y palabras más cortas y comunes"
+        ask = REWRITE.format(ages=req.ages, problem=problem, how=how) + "\n\n" + to_json(story)
         story = parse(llm.chat([{"role": "user", "content": ask}], schema=SCHEMA)) or story
     return trace
