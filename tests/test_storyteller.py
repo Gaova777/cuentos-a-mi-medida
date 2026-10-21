@@ -9,7 +9,7 @@ EASY = "Mariana ve un río. El río es azul. Ella ríe."
 
 def story(text):
     return json.dumps({"titulo": "El río", "protagonista_en_ingles": "a girl with curly hair and a yellow raincoat",
-                       "paginas": [{"texto_en_espanol": text, "escena_en_ingles": "a girl by a river"}
+                       "paginas": [{"oraciones_en_espanol": [text], "escena_en_ingles": "a girl by a river"}
                                    for _ in range(PAGES)]})
 
 
@@ -31,7 +31,7 @@ def test_guided_rewrites_until_on_target():
     llm = Scripted([story(HARD), story(EASY)])
     trace = write(llm, REQ)
     assert [d.on_target for d in trace.drafts] == [False, True]
-    assert "Mariana" in llm.prompts[0] and "compartir" in llm.prompts[0] and "entre 3 y 8 palabras" in llm.prompts[0]
+    assert "Mariana" in llm.prompts[0] and "compartir" in llm.prompts[0] and "entre 4 y 7 palabras" in llm.prompts[0]
     assert "Fernández-Huerta" in llm.prompts[1] and "la meta es al menos 90" in llm.prompts[1]
 
 

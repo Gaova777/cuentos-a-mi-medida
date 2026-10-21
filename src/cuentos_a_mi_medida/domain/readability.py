@@ -121,7 +121,8 @@ def distance(r: Readability, t: Target) -> float:
 
 
 def sentence_list(text: str) -> list[str]:
-    return [p.strip() for p in SENTENCE_END.split(text) if WORD.search(p)]
+    """The sentences, each with its own closing punctuation."""
+    return [p.strip() for p in re.findall(r"[^.!?…]+[.!?…]*", text) if WORD.search(p)]
 
 
 def long_words(text: str, min_syllables: int = 4) -> list[str]:

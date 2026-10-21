@@ -43,7 +43,7 @@ class StoryLLM:
         if "apropiado" in json.dumps(schema or {}):
             return json.dumps({"apropiado": True, "razon": ""})
         return json.dumps({"titulo": "El río", "protagonista_en_ingles": "a girl in a yellow raincoat",
-                           "paginas": [{"texto_en_espanol": EASY, "escena_en_ingles": "a river"}] * PAGES})
+                           "paginas": [{"oraciones_en_espanol": [EASY], "escena_en_ingles": "a river"}] * PAGES})
 
 
 class Blank:

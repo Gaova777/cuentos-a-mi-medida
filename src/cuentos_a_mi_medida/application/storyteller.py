@@ -22,6 +22,11 @@ from cuentos_a_mi_medida.domain.readability import (
 from cuentos_a_mi_medida.domain.story import PAGES, Page, Request, Story
 from cuentos_a_mi_medida.ports.llm import LLM
 
+SENTENCES = 3  # per page
+# words per sentence asked for, inside each age's band: a model asked for an average writes short; asked for each
+# sentence's length, it writes to it (measured: 9-10 year-olds' stories went from 5 to 11 words per sentence)
+SENTENCE_WORDS = {"5-6": (4, 7), "7-8": (6, 10), "9-10": (9, 13)}
+
 SCHEMA = {
     "type": "object",
     "properties": {
@@ -29,8 +34,10 @@ SCHEMA = {
         "protagonista_en_ingles": {"type": "string"},
         "paginas": {"type": "array", "minItems": PAGES, "maxItems": PAGES, "items": {
             "type": "object",
-            "properties": {"texto_en_espanol": {"type": "string"}, "escena_en_ingles": {"type": "string"}},
-            "required": ["texto_en_espanol", "escena_en_ingles"]}},
+            "properties": {"oraciones_en_espanol": {"type": "array", "minItems": SENTENCES, "maxItems": SENTENCES,
+                                                     "items": {"type": "string"}},
+                           "escena_en_ingles": {"type": "string"}},
+            "required": ["oraciones_en_espanol", "escena_en_ingles"]}},
     },
     "required": ["titulo", "protagonista_en_ingles", "paginas"],
 }
@@ -39,7 +46,7 @@ WRITE = """Eres autor de cuentos infantiles colombianos. Escribe un cuento corto
 un final feliz, para leer en voz alta.
 
 - Protagonista: {name}, un niño o niña de {ages} años. Le gusta: {likes}.
-{lesson}- Exactamente {pages} páginas, de 2 a 4 oraciones cada una. El título y el texto de las páginas, en español.
+{lesson}- Exactamente {pages} páginas, cada una con exactamente 3 oraciones en español.
 - Nada de violencia, miedo intenso, marcas comerciales ni personajes con derechos de autor.
 - "protagonista_en_ingles": una descripción visual fija del protagonista, en inglés (edad, pelo, ropa, un detalle
   que lo identifique), sin nombres propios, para que un ilustrador lo dibuje igual en todas las páginas.
@@ -47,13 +54,13 @@ un final feliz, para leer en voz alta.
 {level}
 Responde solo con JSON."""
 
-LEVEL = ("- Para que lo lea solo un niño de {ages} años: oraciones de entre {lo} y {hi} palabras, con palabras "
-         "cortas y comunes.")
+LEVEL = ("- Para que lo lea solo un niño de {ages} años: CADA oración tiene entre {lo} y {hi} palabras (cuéntalas), "
+         "con palabras cortas y comunes.")
 
 REWRITE = """Este cuento es para que lo lea solo un niño de {ages} años. {problem}
 {details}
-Reescribe "texto_en_espanol" de cada página, en español, {how}, sin cambiar la historia, el título, el protagonista
-ni las escenas. Responde solo con el mismo JSON."""
+Reescribe "oraciones_en_espanol" de cada página, en español, {how}, sin cambiar la historia, el título, el
+protagonista ni las escenas. Responde solo con el mismo JSON."""
 
 NOT_SPANISH = "Pero el texto de las páginas no está en español, y tiene que estarlo."
 OFF_TARGET = ("Pero no está al nivel de esa edad: su índice de lecturabilidad Fernández-Huerta es {index} (la meta es "
@@ -80,7 +87,8 @@ class Trace:
 def parse(reply: str) -> Story | None:
     try:
         d = json.loads(reply)
-        pages = [Page(str(p["texto_en_espanol"]).strip(), str(p["escena_en_ingles"]).strip()) for p in d["paginas"]]
+        pages = [Page(" ".join(str(o).strip() for o in p["oraciones_en_espanol"]).strip(),
+                      str(p["escena_en_ingles"]).strip()) for p in d["paginas"]]
         if not pages or not all(p.text for p in pages):
             return None
         return Story(str(d["titulo"]).strip(), str(d["protagonista_en_ingles"]).strip(), pages)
@@ -90,7 +98,8 @@ def parse(reply: str) -> Story | None:
 
 def to_json(story: Story) -> str:
     return json.dumps({"titulo": story.title, "protagonista_en_ingles": story.hero,
-                       "paginas": [{"texto_en_espanol": p.text, "escena_en_ingles": p.scene} for p in story.pages]},
+                       "paginas": [{"oraciones_en_espanol": sentence_list(p.text), "escena_en_ingles": p.scene}
+                                   for p in story.pages]},
                       ensure_ascii=False)
 
 
@@ -107,11 +116,11 @@ def feedback(story: Story, r: Readability, target) -> tuple[str, str, str]:
         short = [s for s in sentences if len(s.split()) < lo][:4]
         details.append("Oraciones demasiado cortas, que debes unir con otras (con y, pero, porque, entonces): "
                        + " / ".join(short))
-        how.append(f"uniendo oraciones cortas hasta que tengan entre {lo} y {hi} palabras")
+        how.append(f"uniendo oraciones cortas hasta que cada una tenga entre {lo} y {hi} palabras")
     elif r.words_per_sentence > hi:
         long = sorted(sentences, key=lambda s: -len(s.split()))[:3]
         details.append("Oraciones demasiado largas, que debes partir: " + " / ".join(long))
-        how.append(f"partiendo oraciones largas en oraciones de entre {lo} y {hi} palabras")
+        how.append(f"partiendo oraciones largas hasta que cada una tenga entre {lo} y {hi} palabras")
     if r.fernandez_huerta < target.min_index:
         hard = long_words(story.text)[:8]
         if hard:
@@ -125,7 +134,8 @@ def write(llm: LLM, req: Request, strategy: str = "rewrite", budget: int = 3) ->
     The kept story is Trace.final: the draft closest to the target."""
     target = TARGETS[req.ages]
     lesson = f"- El cuento enseña, sin sermones: {req.lesson}.\n" if req.lesson else ""
-    level = LEVEL.format(ages=req.ages, lo=int(target.min_words_per_sentence), hi=int(target.max_words_per_sentence))
+    lo, hi = SENTENCE_WORDS[req.ages]
+    level = LEVEL.format(ages=req.ages, lo=lo, hi=hi)
     prompt = WRITE.format(name=req.name, ages=req.ages, likes=req.likes, lesson=lesson, pages=PAGES, level=level)
     trace = Trace(target=target)
 
