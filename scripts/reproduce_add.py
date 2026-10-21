@@ -58,6 +58,7 @@ def load(name: str):
         pipe = AutoPipelineForText2Image.from_pretrained(repo, torch_dtype=torch.float16, variant="fp16")
         if "sdxl" in repo:
             pipe.vae = AutoencoderKL.from_pretrained(SDXL_VAE, torch_dtype=torch.float16)
+            return pipe  # stays on the CPU until the prompts are encoded; see encode_then_move
         return pipe.to("cuda")
     vae = AutoencoderKL.from_pretrained(SDXL_VAE, torch_dtype=torch.float16)
     base = "stabilityai/stable-diffusion-xl-base-1.0"
@@ -73,6 +74,27 @@ def load(name: str):
     return pipe
 
 
+@torch.no_grad()
+def encode_then_move(pipe, captions: list[str]) -> dict:
+    """SDXL-Turbo whole (6.5 GB in fp16) doesn't fit next to the desktop. Encode every caption with the two text
+    encoders first, drop them, and keep only the UNet and the VAE on the GPU; the timing then covers denoising and
+    decoding, which is what the paper's one-step claim is about."""
+    pipe.text_encoder.to("cuda")
+    pipe.text_encoder_2.to("cuda")
+    cache = {}
+    for i in range(0, len(captions), 16):
+        batch = captions[i:i + 16]
+        embeds, _, pooled, _ = pipe.encode_prompt(batch, device="cuda", do_classifier_free_guidance=False)
+        for j, c in enumerate(batch):
+            cache[c] = (embeds[j:j + 1].cpu(), pooled[j:j + 1].cpu())
+    pipe.text_encoder.to("cpu")
+    pipe.text_encoder_2.to("cpu")
+    torch.cuda.empty_cache()
+    pipe.unet.to("cuda")
+    pipe.vae.to("cuda")
+    return cache
+
+
 def generate(name: str, items: list[dict], div: list[dict]):
     _, size, steps, guidance, _ = MODELS[name]
     folder, div_folder = OUT / name, OUT / f"{name}_div"
@@ -85,10 +107,13 @@ def generate(name: str, items: list[dict], div: list[dict]):
     if not jobs:
         return
     pipe = load(name)
+    cache = encode_then_move(pipe, sorted({c for _, c, _ in jobs})) if MODELS[name][0] == "stabilityai/sdxl-turbo" else None
     times = []
     for i, (path, caption, seed) in enumerate(jobs):
         start = time.perf_counter()
-        image = pipe(caption, num_inference_steps=steps, guidance_scale=guidance, height=size, width=size,
+        text = ({"prompt_embeds": cache[caption][0].cuda(), "pooled_prompt_embeds": cache[caption][1].cuda()}
+                if cache else {"prompt": caption})
+        image = pipe(**text, num_inference_steps=steps, guidance_scale=guidance, height=size, width=size,
                      generator=torch.Generator("cuda").manual_seed(seed)).images[0]
         torch.cuda.synchronize()
         if i >= 3:  # warm-up
