@@ -68,6 +68,11 @@ def clip_scores(models, items) -> dict:
     return out
 
 
+def features(out):
+    """transformers 5 returns an output object from get_*_features; 4.x returned the projected tensor."""
+    return out if isinstance(out, torch.Tensor) else out.pooler_output
+
+
 @torch.no_grad()
 def pick_scores(models, items) -> dict:
     from transformers import AutoModel, AutoProcessor
@@ -83,8 +88,8 @@ def pick_scores(models, items) -> dict:
                              return_tensors="pt")["pixel_values"].cuda().half()
             text = processor(text=[it["caption"] for it in batch], padding=True, truncation=True, max_length=77,
                              return_tensors="pt").to("cuda")
-            a = torch.nn.functional.normalize(model.get_image_features(pixel_values=imgs), dim=-1)
-            b = torch.nn.functional.normalize(model.get_text_features(**text), dim=-1)
+            a = torch.nn.functional.normalize(features(model.get_image_features(pixel_values=imgs)), dim=-1)
+            b = torch.nn.functional.normalize(features(model.get_text_features(**text)), dim=-1)
             scores += (model.logit_scale.exp() * (a * b).sum(-1)).float().tolist()
         out[name] = float(np.mean(scores))
     del model
@@ -120,18 +125,29 @@ def main():
     models = [m for m in ("sdxl_turbo_1", "sdxl_turbo_4", "sd_turbo_1", "lcm_sdxl_4", "sdxl_base_25")
               if (OUT / m).exists() and len(list((OUT / m).glob("*.png"))) >= len(items)]
     real = str(real_folder(items))
-    results = {m: {} for m in models}
+    # each metric is saved as soon as it is computed, so a crash doesn't cost the hour of FID before it
+    partial = OUT / "evaluation_partial.json"
+    results = json.loads(partial.read_text()) if partial.exists() else {}
     for m in models:
+        results.setdefault(m, {})
+    save = lambda: partial.write_text(json.dumps(results, indent=1))
+    for m in models:
+        if "kid_1k" in results[m]:
+            continue
         gen = str(resized(OUT / m))
         results[m]["fid_1k"] = round(float(fid.compute_fid(real, gen, mode="clean", num_workers=0)), 2)
         results[m]["kid_1k"] = round(float(fid.compute_kid(real, gen, mode="clean", num_workers=0)), 5)
         timing = OUT / m / "timing.json"
         if timing.exists():
             results[m]["seconds_per_image"] = json.loads(timing.read_text())["median_s"]
+        save()
     for key, fn in (("clip_score", clip_scores), ("pick_score", pick_scores)):
-        for m, v in fn(models, items).items():
-            results[m][key] = round(v, 4)
-    for m, v in diversity(models).items():
+        todo = [m for m in models if key not in results[m]]
+        if todo:
+            for m, v in fn(todo, items).items():
+                results[m][key] = round(v, 4)
+            save()
+    for m, v in diversity([m for m in models if "lpips_diversity" not in results[m]]).items():
         results[m]["lpips_diversity"] = None if v is None else round(v, 4)
     Path("results/reproduction").mkdir(parents=True, exist_ok=True)
     Path("results/reproduction/coco_1k.json").write_text(json.dumps(results, indent=1) + "\n")
