@@ -31,6 +31,7 @@ repro = [
     "clean-fid>=0.1.35",
     "lpips>=0.1.4",
     "open-clip-torch>=3.3.0",
+    "scipy>=1.15,<1.18",
 ]
 
 [tool.ruff]
