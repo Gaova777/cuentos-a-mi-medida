@@ -48,7 +48,7 @@ export async function createStory(body: { name: string; ages: Ages; likes: strin
     body: JSON.stringify(body),
   })
   const data = await r.json()
-  if (!r.ok) throw new Error(data.detail?.reasons?.join(' ') ?? 'No se pudo crear el cuento')
+  if (!r.ok) throw new Error(data.detail?.reasons?.join('; ') ?? 'No se pudo crear el cuento')
   return data as { story_id: string }
 }
 

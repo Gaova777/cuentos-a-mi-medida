@@ -23,12 +23,12 @@ def _plain(text: str) -> str:
 
 
 def problems(text: str) -> list[str]:
-    """Reasons to refuse, in words a parent understands. Empty means the text passes this gate."""
+    """Reasons to refuse, in Spanish, as the parent reads them. Empty means the text passes this gate."""
     out = []
     if PHONE.search(text) or EMAIL.search(text) or ADDRESS.search(text):
-        out.append("contains personal data (a phone, an email or an address): a story only needs a first name")
+        out.append("tiene datos personales (un teléfono, un correo o una dirección): el cuento solo necesita un nombre")
     words = _WORDS.findall(_plain(text))
     hits = sorted({b for b in BLOCKED for w in words if w.startswith(b)})
     if hits:
-        out.append(f"mentions something that doesn't belong in a children's story ({', '.join(hits)})")
+        out.append(f"menciona algo que no va en un cuento infantil ({', '.join(hits)})")
     return out
