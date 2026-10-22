@@ -1,0 +1,159 @@
+{
+ "summary": {
+  "sheet": {
+   "consistency": 0.5956,
+   "scene_clip": 0.2664
+  },
+  "scene": {
+   "consistency": 0.4496,
+   "scene_clip": 0.2877
+  },
+  "stories_more_consistent_with_sheet": "12/12"
+ },
+ "rows": [
+  {
+   "story": 0,
+   "condition": "sheet",
+   "consistency": 0.5007682224114736,
+   "scene_clip": 0.26366883516311646
+  },
+  {
+   "story": 0,
+   "condition": "scene",
+   "consistency": 0.39223518669605256,
+   "scene_clip": 0.27748724818229675
+  },
+  {
+   "story": 1,
+   "condition": "sheet",
+   "consistency": 0.5822713951269786,
+   "scene_clip": 0.2827966809272766
+  },
+  {
+   "story": 1,
+   "condition": "scene",
+   "consistency": 0.388559498389562,
+   "scene_clip": 0.3155629336833954
+  },
+  {
+   "story": 2,
+   "condition": "sheet",
+   "consistency": 0.5899200061957042,
+   "scene_clip": 0.2806026339530945
+  },
+  {
+   "story": 2,
+   "condition": "scene",
+   "consistency": 0.4039629131555557,
+   "scene_clip": 0.31155383586883545
+  },
+  {
+   "story": 3,
+   "condition": "sheet",
+   "consistency": 0.573541796207428,
+   "scene_clip": 0.29019445180892944
+  },
+  {
+   "story": 3,
+   "condition": "scene",
+   "consistency": 0.4096710244814555,
+   "scene_clip": 0.28620046377182007
+  },
+  {
+   "story": 4,
+   "condition": "sheet",
+   "consistency": 0.7214267770449321,
+   "scene_clip": 0.2765883803367615
+  },
+  {
+   "story": 4,
+   "condition": "scene",
+   "consistency": 0.6708612720171611,
+   "scene_clip": 0.28039562702178955
+  },
+  {
+   "story": 5,
+   "condition": "sheet",
+   "consistency": 0.7272964596748352,
+   "scene_clip": 0.25020885467529297
+  },
+  {
+   "story": 5,
+   "condition": "scene",
+   "consistency": 0.4694878568251928,
+   "scene_clip": 0.31182950735092163
+  },
+  {
+   "story": 6,
+   "condition": "sheet",
+   "consistency": 0.5816344698270162,
+   "scene_clip": 0.24741384387016296
+  },
+  {
+   "story": 6,
+   "condition": "scene",
+   "consistency": 0.36475222210089364,
+   "scene_clip": 0.26177018880844116
+  },
+  {
+   "story": 7,
+   "condition": "sheet",
+   "consistency": 0.6046497543652852,
+   "scene_clip": 0.2705901265144348
+  },
+  {
+   "story": 7,
+   "condition": "scene",
+   "consistency": 0.441240398089091,
+   "scene_clip": 0.27994322776794434
+  },
+  {
+   "story": 8,
+   "condition": "sheet",
+   "consistency": 0.5529521683851878,
+   "scene_clip": 0.2654087245464325
+  },
+  {
+   "story": 8,
+   "condition": "scene",
+   "consistency": 0.45264004468917846,
+   "scene_clip": 0.2851194143295288
+  },
+  {
+   "story": 9,
+   "condition": "sheet",
+   "consistency": 0.6022245943546295,
+   "scene_clip": 0.23621521890163422
+  },
+  {
+   "story": 9,
+   "condition": "scene",
+   "consistency": 0.5582544396320979,
+   "scene_clip": 0.28030937910079956
+  },
+  {
+   "story": 10,
+   "condition": "sheet",
+   "consistency": 0.5615561823050181,
+   "scene_clip": 0.26759475469589233
+  },
+  {
+   "story": 10,
+   "condition": "scene",
+   "consistency": 0.4473984181880951,
+   "scene_clip": 0.28645145893096924
+  },
+  {
+   "story": 11,
+   "condition": "sheet",
+   "consistency": 0.5494884610176086,
+   "scene_clip": 0.2655336856842041
+  },
+  {
+   "story": 11,
+   "condition": "scene",
+   "consistency": 0.39650918841362,
+   "scene_clip": 0.2752160429954529
+  }
+ ]
+}
