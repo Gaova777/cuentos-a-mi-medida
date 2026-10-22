@@ -1,0 +1,6 @@
+{
+ "readability_strategy": "rewrite",
+ "min_on_target": 0.6,
+ "min_inappropriate_blocked": 0.75,
+ "max_fine_blocked": 0.05
+}
