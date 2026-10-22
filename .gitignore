@@ -8,3 +8,4 @@ web/.next/
 .terraform/
 *.tfstate*
 .env
+reports/
