@@ -82,4 +82,6 @@ def test_api_checks_queues_and_serves(monkeypatch):
     make(lib.queue.pop(), lib, StoryLLM(), Blank(), Silent())
     s = c.get(f"/stories/{r.json()['story_id']}").json()
     assert s["pages"][0]["image_url"].startswith("http://files/") and s["pages"][0]["audio_url"].endswith(".wav")
-    assert "pages" not in c.get("/stories").json()[0] and c.get("/stories/nope").status_code == 404
+    shelf = c.get("/stories").json()[0]
+    assert "pages" not in shelf and shelf["cover_url"].endswith("page1.jpg")
+    assert c.get("/stories/nope").status_code == 404

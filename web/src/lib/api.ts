@@ -20,6 +20,7 @@ export interface StoryView {
   status: 'queued' | 'writing' | 'drawing' | 'narrating' | 'done' | 'failed' | 'retrying'
   created: number
   request: { name: string; ages: Ages; likes: string; lesson: string }
+  cover_url?: string | null
   title?: string
   pages?: PageView[]
   readability?: {

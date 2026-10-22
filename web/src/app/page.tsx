@@ -99,6 +99,10 @@ export default function Home() {
               <li key={s.story_id}>
                 <Link href={`/cuento/${s.story_id}`} className="book">
                   <span className={`spine ${s.status}`} />
+                  {s.cover_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className="cover" src={s.cover_url} alt="" />
+                  )}
                   <span className="title">{s.title ?? `Un cuento para ${s.request.name}`}</span>
                   <span className="meta">
                     {s.request.name} · {s.request.ages} años · {STATUS[s.status]}

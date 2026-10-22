@@ -57,7 +57,12 @@ def create(body: StoryRequest):
 
 @app.get("/stories")
 def stories():
-    return [{k: v for k, v in s.items() if k != "pages"} for s in library().all()]
+    lib = library()
+    out = []
+    for s in lib.all():
+        first = (s.get("pages") or [{}])[0].get("image")
+        out.append({**{k: v for k, v in s.items() if k != "pages"}, "cover_url": lib.url(first) if first else None})
+    return out
 
 
 @app.get("/stories/{story_id}")
